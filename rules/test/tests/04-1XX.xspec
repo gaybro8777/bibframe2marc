@@ -37,7 +37,7 @@
     <x:expect label="$c from GeographicElement"
               test="//marc:datafield[@tag='111'][1]/marc:subfield[@code='c'] = 'Minneapolis, MN'"/>
     <x:expect label="$0 from URI of agent"
-              test="//marc:datafield[@tag='111'][1]/marc:subfield[@code='0'] = 'http://id.loc.gov/authorities/names/no2009024971'"/>
+              test="//marc:datafield[@tag='111'][1]/marc:subfield[@code='0'] = 'http://my.national.lib/authorities/names/no2009024971'"/>
   </x:scenario>
 
   <x:scenario label="MARC 130">

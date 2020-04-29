@@ -20,8 +20,32 @@
           <case test="default">100</case>
         </switch>
       </var>
+      <var name="vNameAuth">
+        <switch>
+          <case test="starts-with(@rdf:about,'http://id.loc.gov/authorities/names/n')">
+            <transform>
+              <xsl:variable name="vLccn">
+                <xsl:choose>
+                  <xsl:when test="substring(translate(substring-after(@rdf:about,'http://id.loc.gov/authorities/names/n'),'0123456789',''),1,1)=''">
+                    <xsl:value-of select="concat('n%20',substring-after(@rdf:about,'http://id.loc.gov/authorities/names/n'))"/>
+                  </xsl:when>
+                  <xsl:otherwise>
+                    <xsl:value-of select="substring-after(@rdf:about,'http://id.loc.gov/authorities/names/')"/>
+                  </xsl:otherwise>
+                </xsl:choose>
+              </xsl:variable>
+              <xsl:copy-of select="document(concat('http://lx2.loc.gov:210/NAF?query=bath.lccn%3d',$vLccn,'&amp;recordSchema=marcxml&amp;maximumRecords=1'))"/>
+            </transform>
+          </case>
+        </switch>
+      </var>
       <ind1 default="2">
         <switch>
+          <case test="$vNameAuth != ''">
+            <transform>
+              <xsl:value-of select="exsl:node-set($vNameAuth)//marc:datafield[@tag=$vMainEntryTag]/@ind1"/>
+            </transform>
+          </case>
           <case test="$vMainEntryTag='100'">
             <switch>
               <case test="local-name()='FamilyName'">3</case>
@@ -38,6 +62,9 @@
       <ind2 default=" "/>
       <sf code="a" chopPunct="true" repeatable="false">
         <switch>
+          <case test="$vNameAuth != ''">
+            <select xpath="exsl:node-set($vNameAuth)//marc:datafield[@tag=$vMainEntryTag]/marc:subfield[@code='a']"/>
+          </case>
           <case test="$vMainEntryTag='100'">
             <switch>
               <case test="madsrdf:elementList/madsrdf:FullNameElement/madsrdf:elementValue">
@@ -59,31 +86,100 @@
         </switch>
       </sf>
       <switch>
-        <case test="$vMainEntryTag='110'">
-          <sf code="b" chopPunct="true">
-            <select xpath="madsrdf:elementList/*[position() &gt; 1]/madsrdf:elementValue"/>
+        <case test="$vMainEntryTag='100'">
+          <sf code="b" chopPunct="true" repeatable="false">
+            <select xpath="exsl:node-set($vNameAuth)//marc:datafield[@tag=$vMainEntryTag]/marc:subfield[@code='b']"/>
           </sf>
         </case>
-      </switch>
-      <switch>
-        <case test="$vMainEntryTag='100'">
-          <sf code="c" chopPunct="true">
-            <select xpath="madsrdf:elementList/madsrdf:TermsOfAddressNameElement/madsrdf:elementValue"/>
+        <case test="$vMainEntryTag='110'">
+          <sf code="b" chopPunct="true">
+            <switch>
+              <case test="$vNameAuth != ''">
+                <select xpath="exsl:node-set($vNameAuth)//marc:datafield[@tag=$vMainEntryTag]/marc:subfield[@code='b']"/>
+              </case>
+              <case test="default">
+                <select xpath="madsrdf:elementList/*[position() &gt; 1]/madsrdf:elementValue"/>
+              </case>
+            </switch>
           </sf>
         </case>
         <case test="$vMainEntryTag='111'">
-          <sf code="c" chopPunct="true">
-            <select xpath="madsrdf:elementList/*[local-name()='GeographicElement' and position() &gt; 1]/madsrdf:elementValue"/>
+          <sf code="q" chopPunct="true" repeatable="false">
+            <switch>
+              <case test="$vNameAuth != ''">
+                <select xpath="exsl:node-set($vNameAuth)//marc:datafield[@tag=$vMainEntryTag]/marc:subfield[@code='q']"/>
+              </case>
+              <case test="default">
+                <select xpath="madsrdf:elementList/*[local-name()='NameElement' and position() &gt; 1]/madsrdf:elementValue"/>
+              </case>
+            </switch>
           </sf>
         </case>
       </switch>
+      <sf code="c" chopPunct="true">
+        <switch>
+          <case test="$vNameAuth != ''">
+            <select xpath="exsl:node-set($vNameAuth)//marc:datafield[@tag=$vMainEntryTag]/marc:subfield[@code='c']"/>
+          </case>
+          <case test="$vMainEntryTag='100'">
+            <select xpath="madsrdf:elementList/madsrdf:TermsOfAddressNameElement/madsrdf:elementValue"/>
+          </case>
+          <case test="$vMainEntryTag='111'">
+            <select xpath="madsrdf:elementList/*[local-name()='GeographicElement' and position() &gt; 1]/madsrdf:elementValue"/>
+          </case>
+        </switch>
+      </sf>
       <switch>
         <case test="$vMainEntryTag='100'">
           <sf code="d" chopPunct="true" repeatable="false">
-            <select xpath="madsrdf:elementList/madsrdf:DateNameElement/madsrdf:elementValue"/>
+            <switch>
+              <case test="$vNameAuth != ''">
+                <select xpath="exsl:node-set($vNameAuth)//marc:datafield[@tag='100']/marc:subfield[@code='d']"/>
+              </case>
+              <case test="default">
+                <select xpath="madsrdf:elementList/madsrdf:DateNameElement/madsrdf:elementValue"/>
+              </case>
+            </switch>
+          </sf>
+        </case>
+        <case test="default">
+          <sf code="d" chopPunct="true">
+            <select xpath="exsl:node-set($vNameAuth)//marc:datafield[@tag=$vMainEntryTag]/marc:subfield[@code='d']"/>
           </sf>
         </case>
       </switch>
+      <sf code="q" chopPunct="true" repeatable="false">
+        <switch>
+          <case test="$vMainEntryTag='100'">
+            <switch>
+              <case test="$vNameAuth != ''">
+                <select xpath="exsl:node-set($vNameAuth)//marc:datafield[@tag='100']/marc:subfield[@code='q']"/>
+              </case>
+              <case test="default">
+                <select xpath="madsrdf:fullerName/*/rdfs:label"/>
+              </case>
+            </switch>
+          </case>
+        </switch>
+      </sf>
+      <sf code="j" chopPunct="true">
+        <switch>
+          <case test="$vMainEntryTag='100'">
+            <select xpath="exsl:node-set($vNameAuth)//marc:datafield[@tag='100']/marc:subfield[@code='j']"/>
+          </case>
+        </switch>
+      </sf>
+      <sf code="n" chopPunct="true">
+        <switch>
+          <case test="$vMainEntryTag='110' or $vMainEntryTag='111'">
+            <select xpath="exsl:node-set($vNameAuth)//marc:datafield[@tag=$vMainEntryTag]/marc:subfield[@code='n']"/>
+          </case>
+        </switch>
+      </sf>
+      <sf code="g" chopPunct="true">
+        <select xpath="exsl:node-set($vNameAuth)//marc:datafield[@tag=$vMainEntryTag]/marc:subfield[@code='g']"/>
+      </sf>
+      <!-- relator -->
       <switch>
         <case test="$vMainEntryTag='100' or $vMainEntryTag='110'">
           <sf code="e" chopPunct="true">
@@ -105,16 +201,6 @@
                 <case test="default"><select xpath="rdfs:label"/></case>
               </switch>
             </select>
-          </sf>
-        </case>
-      </switch>
-      <switch>
-        <case test="$vMainEntryTag='100'">
-          <sf code="q" chopPunct="true" repeatable="false"><select xpath="madsrdf:fullerName/*/rdfs:label"/></sf>
-        </case>
-        <case test="$vMainEntryTag='111'">
-          <sf code="q" chopPunct="true">
-            <select xpath="madsrdf:elementList/*[local-name()='NameElement' and position() &gt; 1]/madsrdf:elementValue"/>
           </sf>
         </case>
       </switch>
