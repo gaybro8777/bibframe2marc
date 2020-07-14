@@ -1,6 +1,7 @@
 --- 1.0.1-SNAPSHOT
 
 Fix recursion bug in tChopPunct template related to un-matched enclosing punctuation.
+Update 007 conversion. Add extended fill characters.
 
 --- 1.0.0 2020/04/30
 
